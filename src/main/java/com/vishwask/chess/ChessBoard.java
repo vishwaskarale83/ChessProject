@@ -58,6 +58,8 @@ public class ChessBoard {
 
         // Simulate the move to check if it leaves king in check
         Piece capturedPiece = board[toRow][toCol];
+        Piece enPassantCaptured = null;
+        int enPassantRow = -1;
         board[toRow][toCol] = piece;
         board[fromRow][fromCol] = null;
 
@@ -68,9 +70,9 @@ public class ChessBoard {
         boolean isEnPassant = false;
         if (piece.getType() == PieceType.PAWN && Math.abs(toCol - fromCol) == 1 && capturedPiece == null) {
             // En passant capture
-            int capturedPawnRow = piece.getColor() == Color.WHITE ? toRow + 1 : toRow - 1;
-            capturedPiece = board[capturedPawnRow][toCol];
-            board[capturedPawnRow][toCol] = null;
+            enPassantRow = piece.getColor() == Color.WHITE ? toRow + 1 : toRow - 1;
+            enPassantCaptured = board[enPassantRow][toCol];
+            board[enPassantRow][toCol] = null;
             isEnPassant = true;
         }
 
@@ -91,9 +93,8 @@ public class ChessBoard {
         board[fromRow][fromCol] = piece;
         board[toRow][toCol] = capturedPiece;
 
-        if (isEnPassant) {
-            int capturedPawnRow = piece.getColor() == Color.WHITE ? toRow + 1 : toRow - 1;
-            board[capturedPawnRow][toCol] = capturedPiece;
+        if (isEnPassant && enPassantCaptured != null && enPassantRow >= 0) {
+            board[enPassantRow][toCol] = enPassantCaptured;
         }
 
         if (isCastling) {

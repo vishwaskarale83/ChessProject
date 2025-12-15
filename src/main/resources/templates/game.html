@@ -340,6 +340,8 @@
         let turnStartTimestamp = null;
         let timerInterval = null;
         let gameStatus = null;
+        let gameResult = null;
+        let gameEndType = null;
         let localPlayerColor = isWhitePlayer ? 'WHITE' : (isBlackPlayer ? 'BLACK' : null);
         let offerDrawButton = null;
         let resignButton = null;
@@ -507,15 +509,27 @@
         }
 
         function getTurnText() {
-            if (!currentTurn) {
+            if (!currentTurn && !gameStatus) {
                 return 'Loading turn...';
             }
 
             if (gameStatus && gameStatus !== 'ACTIVE') {
-                if (gameStatus === 'WHITE_WON') return 'White won';
-                if (gameStatus === 'BLACK_WON') return 'Black won';
-                if (gameStatus === 'DRAW') return 'Draw';
-                return formatColorName(currentTurn) + ' to move';
+                if (gameStatus === 'FINISHED') {
+                    if (gameResult === 'WHITE_WIN') {
+                        return 'Game Over: White Wins';
+                    }
+                    if (gameResult === 'BLACK_WIN') {
+                        return 'Game Over: Black Wins';
+                    }
+                    if (gameResult === 'DRAW') {
+                        return 'Game Over: Draw';
+                    }
+                    return 'Game Over';
+                }
+                if (gameStatus === 'WAITING') {
+                    return 'Waiting for opponent';
+                }
+                return formatColorName(currentTurn || '') + (currentTurn ? ' to move' : '');
             }
 
             if (isWhitePlayer || isBlackPlayer) {
@@ -523,7 +537,7 @@
                 return isPlayersTurn ? 'Your Move' : "Opponent's move";
             }
 
-            return formatColorName(currentTurn) + ' to move';
+            return formatColorName(currentTurn || '') + ' to move';
         }
 
         function isPlayerParticipant() {
@@ -1008,6 +1022,8 @@
             
             currentTurn = game.currentTurn;
             gameStatus = game.status;
+            gameResult = game.result || null;
+            gameEndType = game.endType || null;
             claimedTimeoutForTurn = null;
             
             // Sync chess.js logic

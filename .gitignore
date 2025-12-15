@@ -1,0 +1,39 @@
+# Maven target directories
+/target/
+
+# IDE metadata
+/.classpath
+/.project
+/.settings/
+/.factorypath
+/.vscode/
+/.idea/
+
+# Buildship / Gradle leftovers
+/.gradle/
+/gradle/
+/build/
+
+# H2 database files
+/chessdb.mv.db
+/chessdb.trace.db
+
+# OS-specific droppings
+.DS_Store
+Thumbs.db
+
+# Logs
+/logs/
+*.log
+
+# Test reports
+/surefire-reports/
+/failsafe-reports/
+
+# IntelliJ/VSCode workspace state
+*.iml
+.idea/modules.xml
+
+# Misc
+*.swp
+*.swo

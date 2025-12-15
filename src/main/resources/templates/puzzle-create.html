@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <title>Create Puzzle</title>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+        integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2"
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet"
+      href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
+      integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU"
+      crossorigin="anonymous">
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"
+        integrity="sha384-8Vi8VHwn3vjQ9eUHUxex3JSN/NFqUg3QbPyX8kWyb93+8AC/pPWTzj+nHtbC5bxD"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4ecf7 100%);
+            margin: 0;
+            padding: 30px 16px 60px;
+            color: #1f2d3d;
+        }
+        .page-wrapper {
+            width: 100%;
+            max-width: 1080px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .page-nav {
+            display: flex;
+            justify-content: flex-start;
+        }
+        .link-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            border-radius: 999px;
+            background: #ffffff;
+            color: #1f2d3d;
+            font-weight: 600;
+            text-decoration: none;
+            box-shadow: 0 6px 16px rgba(31, 45, 61, 0.12);
+            border: 1px solid rgba(31, 45, 61, 0.12);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+        .link-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(31, 45, 61, 0.16);
+            border-color: rgba(31, 120, 255, 0.4);
+        }
+        .link-button:focus-visible {
+            outline: 3px solid rgba(31, 120, 255, 0.45);
+            outline-offset: 2px;
+        }
+        .back-link-icon {
+            width: 10px;
+            height: 10px;
+            border-left: 2px solid currentColor;
+            border-bottom: 2px solid currentColor;
+            transform: rotate(45deg);
+            margin-right: 2px;
+        }
+        h1 {
+            margin: 0;
+            color: #1f2d3d;
+        }
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            align-items: start;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 24px 26px;
+            box-shadow: 0 16px 32px rgba(17, 24, 39, 0.12);
+            border: 1px solid rgba(17, 24, 39, 0.08);
+        }
+        .step-block {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .step-heading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f2d3d;
+        }
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(31, 120, 255, 0.16);
+            color: #1f78ff;
+            font-weight: 700;
+        }
+        .board-card {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        #board {
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        #board .board-b72b1 {
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 18px 36px rgba(17, 24, 39, 0.18);
+        }
+        .board-card [class*="spare-pieces"] {
+            display: flex !important;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .square.highlight-source {
+            box-shadow: inset 0 0 0 3px rgba(31, 120, 255, 0.8);
+        }
+        .square.highlight-target {
+            box-shadow: inset 0 0 0 3px rgba(31, 120, 255, 0.35);
+            background: rgba(31, 120, 255, 0.15);
+        }
+        .mode-toggle {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .mode-toggle button {
+            padding: 10px 18px;
+            border-radius: 999px;
+            border: 1px solid rgba(17, 24, 39, 0.14);
+            background: #ffffff;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.15s ease, border 0.15s ease, color 0.15s ease;
+        }
+        .mode-toggle button.active {
+            background: #1f78ff;
+            border-color: #1f78ff;
+            color: #ffffff;
+        }
+        .board-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .outline-button {
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(17, 24, 39, 0.2);
+            background: #ffffff;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.15s ease, border 0.15s ease;
+        }
+        .outline-button:hover {
+            background: rgba(17, 24, 39, 0.05);
+            border-color: rgba(31, 120, 255, 0.45);
+        }
+        .helper-text {
+            font-size: 13px;
+            color: #4b6176;
+            line-height: 1.45;
+        }
+        .spare-info {
+            text-align: center;
+        }
+        .solution-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .moves-list {
+            background: rgba(31, 120, 255, 0.08);
+            border-radius: 12px;
+            padding: 12px 16px;
+            min-height: 90px;
+            font-family: "Courier New", monospace;
+        }
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+        .field-group label {
+            font-weight: 600;
+            color: #1f2d3d;
+        }
+        .field-group input,
+        .field-group textarea,
+        .field-group select {
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(17, 24, 39, 0.18);
+            font-size: 15px;
+            font-family: inherit;
+        }
+        .field-group textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+        .rating-range-inputs {
+            display: flex;
+            gap: 12px;
+        }
+        .rating-range-inputs input {
+            flex: 1 1 120px;
+        }
+        .radio-group {
+            display: flex;
+            gap: 18px;
+        }
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .submit-actions {
+            margin-top: 24px;
+            display: flex;
+            gap: 12px;
+        }
+        .primary-button {
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #ffffff;
+            background: #1f78ff;
+            transition: background 0.15s ease;
+        }
+        .primary-button:hover {
+            background: #0f4fbf;
+        }
+        .primary-button:disabled {
+            background: rgba(31, 120, 255, 0.35);
+            cursor: not-allowed;
+        }
+        .primary-button:disabled:hover {
+            background: rgba(31, 120, 255, 0.35);
+        }
+        .messages {
+            min-height: 24px;
+            font-weight: 600;
+        }
+        .messages.error {
+            color: #c0392b;
+        }
+        .messages.success {
+            color: #1f704d;
+        }
+        .dialog-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(17, 24, 39, 0.55);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 16px;
+        }
+        .dialog-backdrop.visible {
+            display: flex;
+        }
+        .dialog-box {
+            width: 100%;
+            max-width: 360px;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 22px 24px;
+            box-shadow: 0 24px 48px rgba(17, 24, 39, 0.28);
+        }
+        .dialog-box h3 {
+            margin: 0 0 12px;
+            font-size: 18px;
+            color: #1f2d3d;
+        }
+        .dialog-box p {
+            margin: 0;
+            color: #44556a;
+            line-height: 1.45;
+        }
+        .dialog-buttons {
+            margin-top: 22px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .dialog-button {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+        .dialog-button.primary {
+            background: #1f78ff;
+            color: #ffffff;
+        }
+        .dialog-button.primary:hover {
+            background: #0f4fbf;
+            transform: translateY(-1px);
+        }
+        .dialog-button.secondary {
+            background: #e5e7eb;
+            color: #1f2d3d;
+        }
+        .dialog-button.secondary:hover {
+            background: #d1d5db;
+            transform: translateY(-1px);
+        }
+        .dialog-button.danger {
+            background: #d9534f;
+            color: #ffffff;
+        }
+        .dialog-button.danger:hover {
+            background: #b12b27;
+            transform: translateY(-1px);
+        }
+        .dialog-buttons.promotion-choices {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 74px));
+            justify-content: center;
+            justify-items: center;
+            gap: 14px;
+        }
+        .dialog-button.piece {
+            width: 74px;
+            height: 96px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 8px 12px;
+            gap: 6px;
+            background: #f5f8fc;
+            border: 1px solid rgba(31, 120, 255, 0.2);
+            color: #1f2d3d;
+        }
+        .dialog-button.piece:hover {
+            background: rgba(31, 120, 255, 0.15);
+        }
+        .dialog-button.piece img {
+            width: 48px;
+            height: 48px;
+            pointer-events: none;
+        }
+        .dialog-button.piece span {
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .dialog-button.cancel-action {
+            grid-column: 1 / -1;
+            width: 100%;
+            max-width: 220px;
+            margin-top: 6px;
+            justify-self: center;
+        }
+        @media (max-width: 960px) {
+            body {
+                padding: 24px 12px 48px;
+            }
+            .card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <div class="page-nav">
+            <a href="/puzzles" class="link-button">
+                <span class="back-link-icon" aria-hidden="true"></span>
+                <span>Back to Puzzles</span>
+            </a>
+        </div>
+        <h1>Create Chess Puzzle</h1>
+
+        <div class="content-grid">
+            <div class="card board-card">
+                <div class="step-block">
+                    <h2 class="step-heading"><span class="step-number">1</span>Set the starting position</h2>
+                    <p class="helper-text">Stay in placement mode and use the spare pieces below to lay out the exact starting position before the solution begins.</p>
+                </div>
+                <div class="mode-toggle">
+                    <button id="placement-mode" class="active" type="button">Placement Mode</button>
+                    <button id="recording-mode" type="button">Record Solution Mode</button>
+                </div>
+                <div id="board"></div>
+                <p class="helper-text spare-info">Drag a piece off the board to remove it. Use placement mode to fine tune the setup.</p>
+                <div class="board-actions">
+                    <span class="helper-text">When the layout matches the puzzle, switch to Record Solution Mode to capture every move.</span>
+                    <button id="clear-board" type="button" class="outline-button">Clear Board</button>
+                </div>
+            </div>
+
+            <div class="card form-card">
+                <div class="field-group">
+                    <label for="puzzle-name">Puzzle Name</label>
+                    <input id="puzzle-name" type="text" placeholder="Example: Mate in Two" />
+                </div>
+
+                <div class="field-group">
+                    <label for="puzzle-description">Description</label>
+                    <textarea id="puzzle-description" placeholder="Explain the key idea or instructions."></textarea>
+                </div>
+
+                <div class="field-group">
+                    <label>Side to Move</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="turn" value="WHITE" checked /> White</label>
+                        <label><input type="radio" name="turn" value="BLACK" /> Black</label>
+                    </div>
+                    <span class="helper-text">This determines board orientation and who plays the first move in Step 2.</span>
+                </div>
+
+                <div class="field-group">
+                    <label for="puzzle-difficulty">Difficulty</label>
+                    <select id="puzzle-difficulty">
+                        <option value="EASY">Easy</option>
+                        <option value="MEDIUM" selected>Medium</option>
+                        <option value="HARD">Hard</option>
+                    </select>
+                </div>
+
+                <div class="field-group">
+                    <label for="puzzle-rating-low">Suggested Rating Range</label>
+                    <div class="rating-range-inputs">
+                        <input id="puzzle-rating-low" type="number" min="100" max="3500" step="50" placeholder="Min e.g. 800" />
+                        <input id="puzzle-rating-high" type="number" min="100" max="3500" step="50" placeholder="Max e.g. 1200" />
+                    </div>
+                    <span class="helper-text">Optional. Provide both values to hint at solver strength.</span>
+                </div>
+
+                <div class="step-block">
+                    <h2 class="step-heading"><span class="step-number">2</span>Record the full solution</h2>
+                    <p class="helper-text">Switch to Record Solution Mode and play the exact sequence of moves, including the opponent replies. The save button unlocks after at least one move is recorded.</p>
+                </div>
+
+                <div class="field-group">
+                    <label>Solution Steps</label>
+                    <p class="helper-text">Play through every move in record mode, including replies.</p>
+                    <div class="solution-actions">
+                        <button id="undo-move" type="button" class="outline-button">Undo Last Move</button>
+                        <button id="clear-solution" type="button" class="outline-button">Clear Solution</button>
+                    </div>
+                    <div class="moves-list" id="moves-list">No moves recorded yet.</div>
+                </div>
+
+                <div class="submit-actions">
+                    <button id="save-puzzle" type="button" class="primary-button" disabled>Save Puzzle</button>
+                </div>
+
+                <div class="messages" id="status-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dialog-backdrop" class="dialog-backdrop">
+        <div class="dialog-box" role="dialog" aria-modal="true">
+            <h3 id="dialog-title"></h3>
+            <p id="dialog-message"></p>
+            <div id="dialog-buttons" class="dialog-buttons"></div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        const unicodeToFen = {
+            '♔': 'K', '♕': 'Q', '♖': 'R', '♗': 'B', '♘': 'N', '♙': 'P',
+            '♚': 'k', '♛': 'q', '♜': 'r', '♝': 'b', '♞': 'n', '♟': 'p'
+        };
+        const fenToUnicode = {
+            'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙',
+            'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟'
+        };
+        const PROMOTION_MAP = {
+            QUEEN: 'q',
+            ROOK: 'r',
+            BISHOP: 'b',
+            KNIGHT: 'n'
+        };
+        const PROMOTION_TYPES = ['QUEEN', 'ROOK', 'BISHOP', 'KNIGHT'];
+
+        let boardWidget = null;
+        let currentMode = 'placement';
+        let initialBoardMatrix = createEmptyBoard();
+        let recordedMoves = [];
+        let chessGame = null;
+        let recordingStartFen = null;
+        let dialogBackdrop = null;
+        let dialogTitleEl = null;
+        let dialogMessageEl = null;
+        let dialogButtonsContainer = null;
+        let dialogResolveFn = null;
+        let saveButtonEl = null;
+        let isSaving = false;
+        let highlightedSquares = [];
+        let highlightedSource = null;
+
+        function createEmptyBoard() {
+            return Array.from({ length: 8 }, () => Array(8).fill(''));
+        }
+
+        function cloneMatrix(matrix) {
+            return matrix.map(row => row.slice());
+        }
+
+        function algebraicToRowCol(square) {
+            if (!square || square.length !== 2) {
+                return null;
+            }
+            const file = square.charCodeAt(0) - 'a'.charCodeAt(0);
+            const rank = parseInt(square[1], 10);
+            if (file < 0 || file > 7 || isNaN(rank) || rank < 1 || rank > 8) {
+                return null;
+            }
+            return { row: 8 - rank, col: file };
+        }
+
+        function rowColToAlgebraic(row, col) {
+            const file = String.fromCharCode('a'.charCodeAt(0) + col);
+            const rank = 8 - row;
+            return file + rank;
+        }
+
+        function promotionTypeFromCode(code) {
+            if (!code) {
+                return null;
+            }
+            const lower = String(code).toLowerCase();
+            for (const key in PROMOTION_MAP) {
+                if (Object.prototype.hasOwnProperty.call(PROMOTION_MAP, key) && PROMOTION_MAP[key] === lower) {
+                    return key;
+                }
+            }
+            return null;
+        }
+
+        function matrixToFenPlacement(matrix) {
+            const rows = [];
+            for (let r = 0; r < 8; r++) {
+                let result = '';
+                let empty = 0;
+                for (let c = 0; c < 8; c++) {
+                    const cell = matrix[r][c];
+                    if (!cell) {
+                        empty += 1;
+                        continue;
+                    }
+                    if (empty > 0) {
+                        result += empty;
+                        empty = 0;
+                    }
+                    result += unicodeToFen[cell] || '1';
+                }
+                if (empty > 0) {
+                    result += empty;
+                }
+                rows.push(result || '8');
+            }
+            return rows.join('/');
+        }
+
+        function matrixFromFenPlacement(fenPlacement) {
+            const rows = (fenPlacement || '').split('/');
+            const matrix = [];
+            for (let r = 0; r < 8; r++) {
+                const rowString = rows[r] || '';
+                const row = [];
+                for (const char of rowString) {
+                    if (/[1-8]/.test(char)) {
+                        const empties = parseInt(char, 10);
+                        for (let i = 0; i < empties; i++) {
+                            row.push('');
+                        }
+                    } else {
+                        row.push(fenToUnicode[char] || '');
+                    }
+                }
+                while (row.length < 8) {
+                    row.push('');
+                }
+                matrix.push(row.slice(0, 8));
+            }
+            return matrix;
+        }
+
+        function positionObjectToMatrix(positionObj) {
+            if (typeof positionObj === 'string') {
+                return matrixFromFenPlacement(positionObj);
+            }
+            const matrix = createEmptyBoard();
+            if (!positionObj) {
+                return matrix;
+            }
+            Object.keys(positionObj).forEach(square => {
+                const piece = positionObj[square];
+                if (!piece) {
+                    return;
+                }
+                const isWhite = piece.charAt(0) === 'w';
+                const type = piece.charAt(1);
+                const fenChar = isWhite ? type.toUpperCase() : type.toLowerCase();
+                const unicode = fenToUnicode[fenChar] || '';
+                const coords = algebraicToRowCol(square);
+                if (coords) {
+                    matrix[coords.row][coords.col] = unicode;
+                }
+            });
+            return matrix;
+        }
+
+        function getTurnSelection() {
+            const radio = document.querySelector('input[name="turn"]:checked');
+            return radio ? radio.value : 'WHITE';
+        }
+
+        function getOrientation() {
+            return getTurnSelection() === 'BLACK' ? 'black' : 'white';
+        }
+
+        function buildFullFen(matrix, turn) {
+            const placement = matrixToFenPlacement(matrix);
+            const active = turn === 'BLACK' ? 'b' : 'w';
+            return placement + ' ' + active + ' - - 0 1';
+        }
+
+        function syncPlacementMatrix() {
+            if (!boardWidget) {
+                return;
+            }
+            initialBoardMatrix = positionObjectToMatrix(boardWidget.position());
+        }
+
+        function buildPlacementBoard() {
+            const orientation = getOrientation();
+            boardWidget = Chessboard('board', {
+                position: matrixToFenPlacement(initialBoardMatrix),
+                sparePieces: true,
+                draggable: true,
+                dropOffBoard: 'trash',
+                orientation: orientation,
+                pieceTheme: '/img/chesspieces/wikipedia/{piece}.png',
+                onDrop: () => setTimeout(syncPlacementMatrix, 0),
+                onSnapEnd: () => setTimeout(syncPlacementMatrix, 0)
+            });
+            setTimeout(() => {
+                if (boardWidget && typeof boardWidget.resize === 'function') {
+                    boardWidget.resize();
+                }
+            }, 0);
+        }
+
+        function updateModeButtons() {
+            const placementButton = document.getElementById('placement-mode');
+            const recordingButton = document.getElementById('recording-mode');
+            if (placementButton) {
+                placementButton.classList.toggle('active', currentMode === 'placement');
+            }
+            if (recordingButton) {
+                recordingButton.classList.toggle('active', currentMode === 'recording');
+            }
+        }
+
+        function setMode(mode) {
+            if (mode === currentMode) {
+                return;
+            }
+            if (mode === 'recording') {
+                if (!enterRecordingMode()) {
+                    updateModeButtons();
+                    return;
+                }
+                currentMode = 'recording';
+            } else {
+                exitRecordingMode();
+                currentMode = 'placement';
+            }
+            updateModeButtons();
+        }
+
+        function enterRecordingMode() {
+            syncPlacementMatrix();
+            const turn = getTurnSelection();
+            const fullFen = buildFullFen(initialBoardMatrix, turn);
+            const nextGame = new Chess();
+            if (!nextGame.load(fullFen)) {
+                showStatus('The starting position is not a valid chess position. Ensure both kings are present and the position is legal.', 'error');
+                return false;
+            }
+            chessGame = nextGame;
+            recordingStartFen = chessGame.fen();
+            recordedMoves = [];
+            updateMoveList();
+            boardWidget = Chessboard('board', {
+                position: recordingStartFen.split(' ')[0],
+                sparePieces: false,
+                draggable: true,
+                orientation: getOrientation(),
+                pieceTheme: '/img/chesspieces/wikipedia/{piece}.png',
+                onDragStart: handleRecordingDragStart,
+                onDrop: handleRecordingDrop,
+                onSnapEnd: clearHighlightedSquares
+            });
+            setTimeout(() => {
+                if (boardWidget && typeof boardWidget.resize === 'function') {
+                    boardWidget.resize();
+                }
+            }, 0);
+            showStatus('Recording mode active. Play through the full solution sequence.', null);
+            return true;
+        }
+
+        function exitRecordingMode() {
+            chessGame = null;
+            recordingStartFen = null;
+            recordedMoves = [];
+            updateMoveList();
+            buildPlacementBoard();
+            showStatus('Placement mode active. Adjust the starting position as needed.', null);
+            clearHighlightedSquares();
+        }
+
+        function handleRecordingDragStart(source, piece) {
+            if (!chessGame) {
+                return false;
+            }
+            const turn = chessGame.turn();
+            if ((turn === 'w' && piece.charAt(0) !== 'w') ||
+                (turn === 'b' && piece.charAt(0) !== 'b')) {
+                return false;
+            }
+            const moves = chessGame.moves({ square: source, verbose: true }) || [];
+            if (!moves.length) {
+                return false;
+            }
+            highlightRecordingSquares(source, moves.map(move => move.to));
+        }
+
+        function handleRecordingDrop(source, target, piece) {
+            if (!chessGame) {
+                clearHighlightedSquares();
+                return 'snapback';
+            }
+            if (source === target) {
+                clearHighlightedSquares();
+                return 'snapback';
+            }
+            const moves = chessGame.moves({ square: source, verbose: true }) || [];
+            if (!moves.length) {
+                clearHighlightedSquares();
+                return 'snapback';
+            }
+            const selected = moves.find(move => move.to === target);
+            if (!selected) {
+                clearHighlightedSquares();
+                return 'snapback';
+            }
+
+            const moveColor = piece.charAt(0) === 'b' ? 'b' : 'w';
+            const finalizeMove = (promotionChoice) => {
+                const config = { from: source, to: target };
+                if (promotionChoice) {
+                    config.promotion = PROMOTION_MAP[promotionChoice];
+                }
+                const result = chessGame.move(config);
+                if (!result) {
+                    boardWidget.position(chessGame.fen().split(' ')[0]);
+                    return;
+                }
+                const fromCoords = algebraicToRowCol(source);
+                const toCoords = algebraicToRowCol(target);
+                if (fromCoords && toCoords) {
+                    const entry = {
+                        fromRow: fromCoords.row,
+                        fromCol: fromCoords.col,
+                        toRow: toCoords.row,
+                        toCol: toCoords.col
+                    };
+                    if (promotionChoice) {
+                        entry.promotion = promotionChoice;
+                    }
+                    recordedMoves.push(entry);
+                    updateMoveList();
+                }
+                boardWidget.position(chessGame.fen().split(' ')[0]);
+                showStatus('', null);
+                clearHighlightedSquares();
+            };
+
+            if (selected.promotion) {
+                promptPromotionChoice(moveColor).then(choice => {
+                    if (!choice) {
+                        boardWidget.position(chessGame.fen().split(' ')[0]);
+                        clearHighlightedSquares();
+                        return;
+                    }
+                    finalizeMove(choice);
+                });
+                return 'snapback';
+            }
+
+            finalizeMove(null);
+        }
+
+        function highlightRecordingSquares(sourceSquare, targetSquares) {
+            clearHighlightedSquares();
+            highlightedSource = sourceSquare;
+            highlightedSquares = Array.isArray(targetSquares) ? targetSquares.slice() : [];
+            requestAnimationFrame(() => {
+                const boardEl = document.getElementById('board');
+                if (!boardEl) {
+                    return;
+                }
+                if (highlightedSource) {
+                    const fromEl = boardEl.querySelector('.square-' + highlightedSource);
+                    if (fromEl) {
+                        fromEl.classList.add('highlight-source');
+                    }
+                }
+                highlightedSquares.forEach(square => {
+                    const squareEl = boardEl.querySelector('.square-' + square);
+                    if (squareEl) {
+                        squareEl.classList.add('highlight-target');
+                    }
+                });
+            });
+        }
+
+        function clearHighlightedSquares() {
+            const boardEl = document.getElementById('board');
+            if (boardEl) {
+                if (highlightedSource) {
+                    const fromEl = boardEl.querySelector('.square-' + highlightedSource);
+                    if (fromEl) {
+                        fromEl.classList.remove('highlight-source');
+                    }
+                }
+                highlightedSquares.forEach(square => {
+                    const squareEl = boardEl.querySelector('.square-' + square);
+                    if (squareEl) {
+                        squareEl.classList.remove('highlight-target');
+                    }
+                });
+            }
+            highlightedSource = null;
+            highlightedSquares = [];
+        }
+
+        function updateSaveButtonState() {
+            if (!saveButtonEl) {
+                return;
+            }
+            if (isSaving) {
+                saveButtonEl.disabled = true;
+                return;
+            }
+            const hasSolution = Array.isArray(recordedMoves) && recordedMoves.length > 0;
+            saveButtonEl.disabled = !hasSolution;
+        }
+
+        function updateMoveList() {
+            const list = document.getElementById('moves-list');
+            if (!list) {
+                return;
+            }
+            if (!recordedMoves.length) {
+                list.textContent = 'No moves recorded yet.';
+                updateSaveButtonState();
+                return;
+            }
+            list.innerHTML = recordedMoves.map((move, index) => {
+                const from = rowColToAlgebraic(move.fromRow, move.fromCol);
+                const to = rowColToAlgebraic(move.toRow, move.toCol);
+                return (index + 1) + '. ' + from + ' → ' + to;
+            }).join('<br>');
+            updateSaveButtonState();
+        }
+
+        function undoLastMove() {
+            if (!chessGame || !recordedMoves.length) {
+                showStatus('No recorded moves to undo.', 'error');
+                return;
+            }
+            chessGame.undo();
+            recordedMoves.pop();
+            boardWidget.position(chessGame.fen().split(' ')[0]);
+            updateMoveList();
+            showStatus('', null);
+            clearHighlightedSquares();
+        }
+
+        function clearSolution() {
+            if (!chessGame) {
+                recordedMoves = [];
+                updateMoveList();
+                showStatus('Solution cleared.', null);
+                return;
+            }
+            if (recordingStartFen) {
+                chessGame.load(recordingStartFen);
+            }
+            recordedMoves = [];
+            boardWidget.position(chessGame.fen().split(' ')[0]);
+            updateMoveList();
+            showStatus('Solution cleared.', null);
+            clearHighlightedSquares();
+        }
+
+        function clearPlacementBoard() {
+            if (currentMode !== 'placement') {
+                showStatus('Switch to placement mode to edit the starting position.', 'error');
+                return;
+            }
+            if (boardWidget) {
+                boardWidget.position('empty');
+            }
+            syncPlacementMatrix();
+            showStatus('', null);
+            clearHighlightedSquares();
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status-message');
+            if (!status) {
+                return;
+            }
+            status.textContent = message || '';
+            status.className = 'messages';
+            if (type) {
+                status.classList.add(type);
+            }
+        }
+
+        function createPuzzlePayload() {
+            const name = document.getElementById('puzzle-name')?.value || '';
+            const description = document.getElementById('puzzle-description')?.value || '';
+            const difficulty = document.getElementById('puzzle-difficulty')?.value || 'MEDIUM';
+            const ratingLowValue = document.getElementById('puzzle-rating-low')?.value || '';
+            const ratingHighValue = document.getElementById('puzzle-rating-high')?.value || '';
+            const turn = getTurnSelection();
+            if (currentMode === 'placement') {
+                syncPlacementMatrix();
+            }
+            let ratingLow = null;
+            if (ratingLowValue.trim()) {
+                const parsedLow = Number.parseInt(ratingLowValue, 10);
+                ratingLow = Number.isNaN(parsedLow) ? null : parsedLow;
+            }
+            let ratingHigh = null;
+            if (ratingHighValue.trim()) {
+                const parsedHigh = Number.parseInt(ratingHighValue, 10);
+                ratingHigh = Number.isNaN(parsedHigh) ? null : parsedHigh;
+            }
+            return {
+                name,
+                description,
+                boardState: cloneMatrix(initialBoardMatrix),
+                turn,
+                moves: recordedMoves.map(move => Object.assign({}, move)),
+                difficulty,
+                ratingLow,
+                ratingHigh
+            };
+        }
+
+        function validatePuzzlePayload(payload) {
+            if (!payload.name || !payload.name.trim()) {
+                showStatus('Provide a puzzle name.', 'error');
+                return false;
+            }
+            const hasPiece = payload.boardState.some(row => row.some(cell => cell));
+            if (!hasPiece) {
+                showStatus('Place at least one piece on the board.', 'error');
+                return false;
+            }
+            if (!payload.moves || !payload.moves.length) {
+                showStatus('Record the full solution in recording mode before saving.', 'error');
+                return false;
+            }
+            const hasLow = typeof payload.ratingLow === 'number';
+            const hasHigh = typeof payload.ratingHigh === 'number';
+            if (hasLow !== hasHigh) {
+                showStatus('Provide both minimum and maximum rating or leave both blank.', 'error');
+                return false;
+            }
+            if (hasLow && hasHigh) {
+                if (payload.ratingLow < 100 || payload.ratingLow > 3500 || payload.ratingHigh < 100 || payload.ratingHigh > 3500) {
+                    showStatus('Rating values must fall between 100 and 3500.', 'error');
+                    return false;
+                }
+                if (payload.ratingLow > payload.ratingHigh) {
+                    showStatus('Rating minimum cannot exceed rating maximum.', 'error');
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        async function savePuzzle() {
+            const payload = createPuzzlePayload();
+            if (!validatePuzzlePayload(payload)) {
+                return;
+            }
+            isSaving = true;
+            updateSaveButtonState();
+            showStatus('Saving puzzle...', null);
+            try {
+                const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+                const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+                const headers = { 'Content-Type': 'application/json' };
+                if (csrfToken && csrfHeader) {
+                    headers[csrfHeader] = csrfToken;
+                }
+                const response = await fetch('/api/puzzles', {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    showStatus(data.message || 'Unable to save puzzle.', 'error');
+                    return;
+                }
+                showStatus('', null);
+                const puzzleId = data.puzzleId;
+                const choice = await showDialog({
+                    title: 'Puzzle saved',
+                    message: 'Your puzzle is ready. What would you like to do next?',
+                    buttons: puzzleId ? [
+                        { label: 'Solve puzzle', value: 'solve', variant: 'primary' },
+                        { label: 'Back to puzzles', value: 'list', variant: 'secondary' }
+                    ] : [
+                        { label: 'Back to puzzles', value: 'list', variant: 'primary' }
+                    ]
+                });
+                if (puzzleId && choice === 'solve') {
+                    window.location.href = '/puzzle/' + puzzleId;
+                    return;
+                }
+                window.location.href = '/puzzles';
+            } catch (error) {
+                showStatus('Unable to save puzzle right now.', 'error');
+            } finally {
+                isSaving = false;
+                updateSaveButtonState();
+            }
+        }
+
+        function promotionImagePath(pieceColor, promotionType) {
+            const prefix = pieceColor === 'b' ? 'b' : 'w';
+            const code = PROMOTION_MAP[promotionType];
+            if (!code) {
+                return null;
+            }
+            return '/img/chesspieces/wikipedia/' + prefix + code + '.png';
+        }
+
+        function promotionLabel(promotionType) {
+            return promotionType.charAt(0) + promotionType.slice(1).toLowerCase();
+        }
+
+        function buildPromotionButtonHtml(pieceColor, promotionType) {
+            const imgSrc = promotionImagePath(pieceColor, promotionType);
+            const label = promotionLabel(promotionType);
+            if (!imgSrc) {
+                return label;
+            }
+            return '<img src="' + imgSrc + '" alt="' + label + ' piece" /><span>' + label + '</span>';
+        }
+
+        function promptPromotionChoice(pieceColor) {
+            const colorLabel = pieceColor === 'b' ? 'Black' : 'White';
+            const choiceButtons = PROMOTION_TYPES.map(type => ({
+                html: buildPromotionButtonHtml(pieceColor, type),
+                value: type,
+                variant: 'piece',
+                ariaLabel: 'Promote to ' + promotionLabel(type)
+            }));
+            choiceButtons.push({ label: 'Cancel', value: null, variant: 'secondary cancel-action' });
+            return showDialog({
+                title: colorLabel + ' pawn promotion',
+                message: 'Select a piece to promote to.',
+                buttons: choiceButtons,
+                buttonsClass: 'promotion-choices'
+            }).then(choice => choice || null);
+        }
+
+        function showDialog(options) {
+            if (!dialogBackdrop || !dialogButtonsContainer) {
+                return Promise.resolve(options && options.buttons && options.buttons.length ? options.buttons[options.buttons.length - 1].value : null);
+            }
+            const dialogOptions = options || {};
+            const buttons = dialogOptions.buttons && dialogOptions.buttons.length ? dialogOptions.buttons : [{ label: 'OK', value: 'ok', variant: 'primary' }];
+            dialogTitleEl.textContent = dialogOptions.title || '';
+            dialogMessageEl.textContent = dialogOptions.message || '';
+            dialogButtonsContainer.innerHTML = '';
+            dialogButtonsContainer.className = 'dialog-buttons';
+            if (dialogOptions.buttonsClass) {
+                dialogButtonsContainer.className += ' ' + dialogOptions.buttonsClass;
+            }
+            return new Promise(resolve => {
+                dialogResolveFn = resolve;
+                buttons.forEach(button => {
+                    const btn = document.createElement('button');
+                    if (button.html) {
+                        btn.innerHTML = button.html;
+                        if (button.ariaLabel) {
+                            btn.setAttribute('aria-label', button.ariaLabel);
+                        }
+                    } else {
+                        btn.textContent = button.label || 'OK';
+                    }
+                    const variantClass = button.variant ? ' ' + button.variant : ' primary';
+                    btn.className = 'dialog-button' + variantClass;
+                    btn.addEventListener('click', () => hideDialog(button.hasOwnProperty('value') ? button.value : null));
+                    dialogButtonsContainer.appendChild(btn);
+                });
+                dialogBackdrop.classList.add('visible');
+            });
+        }
+
+        function hideDialog(result) {
+            if (!dialogBackdrop) {
+                return;
+            }
+            dialogBackdrop.classList.remove('visible');
+            if (dialogButtonsContainer) {
+                dialogButtonsContainer.innerHTML = '';
+            }
+            const resolver = dialogResolveFn;
+            dialogResolveFn = null;
+            if (resolver) {
+                resolver(result);
+            }
+        }
+
+        function initPage() {
+            dialogBackdrop = document.getElementById('dialog-backdrop');
+            dialogTitleEl = document.getElementById('dialog-title');
+            dialogMessageEl = document.getElementById('dialog-message');
+            dialogButtonsContainer = document.getElementById('dialog-buttons');
+            if (dialogBackdrop) {
+                dialogBackdrop.addEventListener('click', event => {
+                    if (event.target === dialogBackdrop) {
+                        hideDialog(null);
+                    }
+                });
+            }
+
+            const placementButton = document.getElementById('placement-mode');
+            const recordingButton = document.getElementById('recording-mode');
+            if (placementButton) {
+                placementButton.addEventListener('click', () => setMode('placement'));
+            }
+            if (recordingButton) {
+                recordingButton.addEventListener('click', () => setMode('recording'));
+            }
+
+            const undoButton = document.getElementById('undo-move');
+            if (undoButton) {
+                undoButton.addEventListener('click', undoLastMove);
+            }
+            const clearButton = document.getElementById('clear-solution');
+            if (clearButton) {
+                clearButton.addEventListener('click', clearSolution);
+            }
+            saveButtonEl = document.getElementById('save-puzzle');
+            if (saveButtonEl) {
+                saveButtonEl.addEventListener('click', savePuzzle);
+            }
+            const clearBoardButton = document.getElementById('clear-board');
+            if (clearBoardButton) {
+                clearBoardButton.addEventListener('click', clearPlacementBoard);
+            }
+
+            document.querySelectorAll('input[name="turn"]').forEach(radio => {
+                radio.addEventListener('change', () => {
+                    if (currentMode === 'recording') {
+                        showStatus('Switch back to placement mode and re-enter recording to change the side to move.', 'error');
+                        return;
+                    }
+                    if (boardWidget) {
+                        boardWidget.orientation(getOrientation());
+                    }
+                });
+            });
+
+            buildPlacementBoard();
+            updateModeButtons();
+            updateMoveList();
+            updateSaveButtonState();
+            showStatus('', null);
+
+            window.addEventListener('resize', () => {
+                if (boardWidget && typeof boardWidget.resize === 'function') {
+                    boardWidget.resize();
+                }
+            });
+        }
+
+        initPage();
+    </script>
+</body>
+</html>

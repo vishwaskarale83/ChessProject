@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Chess Online</title>
+    <style>
+        body {
+            font-family: "Inter", Arial, sans-serif;
+            background: linear-gradient(135deg, #eff7ff 0%, #fdf7ff 100%);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1f2d3d;
+        }
+        .container {
+            background: #ffffff;
+            padding: 44px 40px;
+            border-radius: 18px;
+            box-shadow: 0 22px 48px rgba(49, 71, 91, 0.16);
+            width: min(380px, calc(100vw - 32px));
+            display: flex;
+            flex-direction: column;
+            gap: 26px;
+        }
+        .brand {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .brand h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: #1f2d3d;
+        }
+        .brand p {
+            margin: 0;
+            font-size: 0.95rem;
+            color: #5c6c7c;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #314154;
+        }
+        input {
+            padding: 12px;
+            border: 1px solid rgba(34, 160, 107, 0.22);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        input:focus {
+            outline: none;
+            border-color: #22a06b;
+            box-shadow: 0 0 0 3px rgba(34, 160, 107, 0.18);
+        }
+        button {
+            padding: 12px;
+            background: linear-gradient(135deg, #22a06b 0%, #1a7f54 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(34, 160, 107, 0.25);
+        }
+        .error {
+            color: #d93025;
+            text-align: center;
+            font-size: 0.9rem;
+            background: rgba(217, 48, 37, 0.08);
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+        .form-footer {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #5c6c7c;
+        }
+        .auth-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-weight: 600;
+            color: #1f78ff;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        .auth-link:hover {
+            color: #0f4fbf;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="brand">
+            <h1>Create your account</h1>
+            <p>Start new matches, track progress, and challenge friends.</p>
+        </div>
+        <form th:action="@{/register}" method="post">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input id="username" type="text" name="username" placeholder="Choose a username" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input id="email" type="email" name="email" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input id="password" type="password" name="password" placeholder="Create a password" required>
+            </div>
+            <button type="submit">Register</button>
+        </form>
+        <div th:if="${error}" class="error" th:text="${error}"></div>
+        <div class="form-footer">
+            Already have an account?
+            <a class="auth-link" href="/login">Log in here</a>
+        </div>
+    </div>
+</body>
+</html>

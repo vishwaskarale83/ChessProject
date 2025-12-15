@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            color: #333;
+        }
+        #board {
+            display: grid;
+            grid-template-columns: repeat(8, 50px);
+            grid-template-rows: repeat(8, 50px);
+            border: 2px solid #333;
+            margin: 20px;
+        }
+        .square {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .white {
+            background-color: #f0d9b5;
+        }
+        .black {
+            background-color: #b58863;
+        }
+        .selected {
+            background-color: #ffff00 !important;
+        }
+        #turn {
+            font-size: 18px;
+            margin: 10px;
+        }
+        #message {
+            font-size: 16px;
+            color: #d9534f;
+            margin: 10px;
+            min-height: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chess Game</h1>
+    <div id="turn">Loading...</div>
+    <div id="message"></div>
+    <div id="board"></div>
+    <div>
+        <button onclick="resetGame()">Reset Game</button>
+        <button onclick="makeAIMove()">AI Move</button>
+    </div>
+
+    <script>
+        let board = [];
+        let selectedSquare = null;
+        let currentTurn = '';
+
+        async function loadBoard() {
+            const response = await fetch('/chess/board');
+            board = await response.json();
+            renderBoard();
+            loadTurn();
+            loadMessage();
+        }
+
+        async function loadTurn() {
+            const response = await fetch('/chess/turn');
+            const text = await response.text();
+            document.getElementById('turn').textContent = text + "'s turn";
+        }
+
+        async function loadMessage() {
+            const response = await fetch('/chess/message');
+            const message = await response.text();
+            document.getElementById('message').textContent = message;
+        }
+
+        function renderBoard() {
+            const boardElement = document.getElementById('board');
+            boardElement.innerHTML = '';
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const square = document.createElement('div');
+                    square.className = 'square ' + ((row + col) % 2 === 0 ? 'white' : 'black');
+                    square.textContent = board[row][col];
+                    square.dataset.row = row;
+                    square.dataset.col = col;
+                    square.onclick = () => handleSquareClick(row, col);
+                    boardElement.appendChild(square);
+                }
+            }
+        }
+
+        function handleSquareClick(row, col) {
+            if (selectedSquare) {
+                // Attempt to move
+                makeMove(selectedSquare.row, selectedSquare.col, row, col);
+                selectedSquare = null;
+                document.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
+            } else {
+                // Select piece
+                if (board[row][col] !== '') {
+                    selectedSquare = { row, col };
+                    document.querySelector(`[data-row="${row}"][data-col="${col}"]`).classList.add('selected');
+                }
+            }
+        }
+
+        async function makeMove(fromRow, fromCol, toRow, toCol) {
+            const response = await fetch(`/chess/move?fromRow=${fromRow}&fromCol=${fromCol}&toRow=${toRow}&toCol=${toCol}`, {
+                method: 'POST'
+            });
+            const result = await response.text();
+            document.getElementById('message').textContent = result;
+            loadBoard();
+        }
+
+        async function resetGame() {
+            await fetch('/chess/reset', { method: 'POST' });
+            loadBoard();
+        }
+
+        async function makeAIMove() {
+            await fetch('/chess/ai', { method: 'POST' });
+            loadBoard();
+        }
+
+        window.onload = loadBoard;
+    </script>
+</body>
+</html>

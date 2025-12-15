@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Chess Online</title>
+    <style>
+        body {
+            font-family: "Inter", Arial, sans-serif;
+            background: linear-gradient(135deg, #eff3ff 0%, #f8fbff 100%);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1f2d3d;
+        }
+        .container {
+            background: #ffffff;
+            padding: 42px 40px;
+            border-radius: 18px;
+            box-shadow: 0 22px 45px rgba(31, 45, 61, 0.15);
+            width: min(360px, calc(100vw - 32px));
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .brand {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .brand h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: #1f2d3d;
+            letter-spacing: 0.02em;
+        }
+        .brand p {
+            margin: 0;
+            font-size: 0.95rem;
+            color: #5c6c7c;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #314154;
+        }
+        input {
+            padding: 12px;
+            border: 1px solid rgba(31, 120, 255, 0.18);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        input:focus {
+            outline: none;
+            border-color: #1f78ff;
+            box-shadow: 0 0 0 3px rgba(31, 120, 255, 0.18);
+        }
+        button {
+            padding: 12px;
+            background: linear-gradient(135deg, #1f78ff 0%, #0f4fbf 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(15, 79, 191, 0.25);
+        }
+        .message {
+            color: #1f7847;
+            text-align: center;
+            font-size: 0.9rem;
+            background: rgba(31, 120, 70, 0.08);
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+        .form-footer {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #5c6c7c;
+        }
+        .auth-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-weight: 600;
+            color: #1f78ff;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        .auth-link:hover {
+            color: #0f4fbf;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="brand">
+            <h1>Welcome to CheckMate IQ</h1>
+            <p>Sign in to continue your next chess battle.</p>
+        </div>
+        <form th:action="@{/login}" method="post">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input id="username" type="text" name="username" placeholder="Enter your username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input id="password" type="password" name="password" placeholder="Enter your password" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+        <div th:if="${message}" class="message" th:text="${message}"></div>
+        <div class="form-footer">
+            Need an account?
+            <a class="auth-link" href="/register">Create one now</a>
+        </div>
+    </div>
+</body>
+</html>

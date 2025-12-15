@@ -26,8 +26,8 @@ git --version
 ### Clone the repository
 
 ```bash
-git clone <repo-url>
-cd JavaProject
+git clone https://github.com/vishwaskarale83/ChessProject.git
+cd ChessProject
 ```
 
 ### First-time Maven build
@@ -40,6 +40,15 @@ This resolves dependencies and compiles against Java 8.
 
 ## Running the Application
 
+### From Eclipse
+
+1. Launch Eclipse and ensure Java 8 is the active JRE under Window → Preferences → Java → Installed JREs.
+2. Import the project via File → Import → Maven → Existing Maven Projects and select the `ChessProject` directory containing pom.xml.
+3. After the workspace build completes, right-click src/main/java/com/vishwask/ChessApplication.java in Package Explorer.
+4. Choose Run As → Spring Boot App (or Run As → Java Application if the Spring Boot option is unavailable).
+5. Watch the Console view for “Started ChessApplication” and browse to http://localhost:8081.
+
+
 ### From the terminal
 
 ```bash
@@ -47,14 +56,6 @@ mvn spring-boot:run
 ```
 
 The application serves the UI at http://localhost:8081. Stop with Ctrl+C.
-
-### From Eclipse
-
-1. Launch Eclipse and ensure Java 8 is the active JRE under Window → Preferences → Java → Installed JREs.
-2. Import the project via File → Import → Maven → Existing Maven Projects and select the `JavaProject` directory containing pom.xml.
-3. After the workspace build completes, right-click src/main/java/com/example/DemoApplication.java in Package Explorer.
-4. Choose Run As → Spring Boot App (or Run As → Java Application if the Spring Boot option is unavailable).
-5. Watch the Console view for “Started DemoApplication” and browse to http://localhost:8081.
 
 ## Database Notes
 
@@ -84,8 +85,3 @@ mvn test
 - **Port in use:** Adjust server.port in [src/main/resources/application.properties](src/main/resources/application.properties) or stop competing services.
 - **H2 version mismatch:** Delete regenerated chessdb files when switching between framework versions.
 - **Gradle errors in Eclipse:** Remove any accidental Gradle project import and re-import strictly as Maven.
-
-## Next Additions
-
-- Add screenshots or GIFs illustrating gameplay and puzzle flows (placeholders for future documentation)
-- Document any custom profiles or deployment steps once finalized

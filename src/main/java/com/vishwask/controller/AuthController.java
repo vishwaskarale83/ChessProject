@@ -1,5 +1,7 @@
 package com.vishwask.controller;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -36,9 +38,21 @@ public class AuthController {
     }
 
     @GetMapping("/login")
-    public String showLoginForm(@RequestParam(required = false) String registered, Model model) {
+    public String showLoginForm(@RequestParam(required = false) String registered,
+                               @RequestParam(required = false) String error,
+                               Model model,
+                               HttpServletRequest request) {
         if (registered != null) {
             model.addAttribute("message", "Registration successful! Please login.");
+        }
+        if (error != null) {
+            Object lastException = request.getSession().getAttribute("SPRING_SECURITY_LAST_EXCEPTION");
+            if (lastException instanceof Exception) {
+                model.addAttribute("error", ((Exception) lastException).getMessage());
+            } else {
+                model.addAttribute("error", "Login failed. Please try again.");
+            }
+            request.getSession().removeAttribute("SPRING_SECURITY_LAST_EXCEPTION");
         }
         return "login";
     }

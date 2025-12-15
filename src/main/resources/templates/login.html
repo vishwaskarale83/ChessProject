@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Chess Online</title>
+    <title>CheckMateIQ</title>
     <style>
         body {
             font-family: "Inter", Arial, sans-serif;
@@ -92,6 +92,14 @@
             border-radius: 10px;
             padding: 10px 12px;
         }
+        .error {
+            color: #b4292e;
+            text-align: center;
+            font-size: 0.9rem;
+            background: rgba(180, 41, 46, 0.1);
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
         .form-footer {
             text-align: center;
             font-size: 0.9rem;
@@ -130,6 +138,7 @@
             <button type="submit">Login</button>
         </form>
         <div th:if="${message}" class="message" th:text="${message}"></div>
+        <div th:if="${error}" class="error" th:text="${error}"></div>
         <div class="form-footer">
             Need an account?
             <a class="auth-link" href="/register">Create one now</a>
